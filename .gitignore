@@ -1,0 +1,84 @@
+# Python
+
+**pycache**/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+
+venv/
+.env/
+.venv/
+
+# Environment Variables
+
+.env
+
+# VS Code
+
+.vscode/
+
+# JetBrains IDEs
+
+.idea/
+
+# Streamlit Cache
+
+.streamlit/
+
+# Python Build Files
+
+build/
+dist/
+*.egg-info/
+
+# Logs
+
+*.log
+
+# CSV Sensor Data
+
+data/sensor_data.csv
+
+# Generated Reports
+
+outputs/
+outputs/reports/
+*.pdf
+
+# Machine Learning Models
+
+ml/*.pkl
+*.pkl
+
+# System Files
+
+.DS_Store
+Thumbs.db
+
+# Temporary Files
+
+*.tmp
+*.bak
+
+# Wokwi
+
+wokwi.toml
+
+# Jupyter
+
+.ipynb_checkpoints/
+
+# ThingSpeak Secrets
+
+config.py
+secrets.py
+
+# OpenWeatherMap API Keys
+
+weather/api_keys.py
+
+# Local Database
+
+*.db
+*.sqlite3
