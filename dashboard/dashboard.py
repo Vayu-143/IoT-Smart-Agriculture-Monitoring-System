@@ -43,20 +43,24 @@ with col2:
             "Pump": random.choice(["ON", "OFF"]),
             "Alerts": ""
         }
-        
-        df = pd.read_csv(csv_file) if os.path.exists(csv_file) else pd.DataFrame()
 
+        try:
+            df = pd.read_csv(csv_file)
+        except:
+            df = pd.DataFrame(columns=["Soil", "Temperature", "Humidity", "Light", "Water", "Pump", "Alerts"])
+
+        # If CSV contains only the reset row
         if len(df) == 1 and df.iloc[0]["Soil"] == 0:
-            df = pd.DataFrame()
+            df = pd.DataFrame(columns=["Soil", "Temperature", "Humidity", "Light", "Water", "Pump", "Alerts"])
 
-        df.loc[len(df)] = new_row
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
         df.to_csv(csv_file, index=False)
         st.success("New data generated")
         st.rerun()
 
 with col3:
     if st.button("🗑 Clear Data"):
-        default_df = pd.DataFrame([{
+        pd.DataFrame([{
             "Soil": 0,
             "Temperature": 0,
             "Humidity": 0,
@@ -64,14 +68,12 @@ with col3:
             "Water": 0,
             "Pump": "OFF",
             "Alerts": ""
-        }])
-        default_df.to_csv(csv_file, index=False)
-        st.success("Data reset successfully")
+        }]).to_csv(csv_file, index=False)
+        st.success("Data cleared")
         st.rerun()
 
 # --- LOAD AND PROTECT DATA ---
 if not os.path.exists(csv_file):
-    # Initialize file if it doesn't exist
     pd.DataFrame(columns=["Soil", "Temperature", "Humidity", "Light", "Water", "Pump", "Alerts"]).to_csv(csv_file, index=False)
 
 df = pd.read_csv(csv_file)
