@@ -36,16 +36,6 @@ dist/
 
 *.log
 
-# CSV Sensor Data
-
-data/sensor_data.csv
-
-# Generated Reports
-
-outputs/
-outputs/reports/
-*.pdf
-
 # Machine Learning Models
 
 ml/*.pkl

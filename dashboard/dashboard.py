@@ -37,8 +37,21 @@ st.title("🌱 IoT Smart Agriculture Monitoring System")
 csv_file = "data/sensor_data.csv"
 
 if not os.path.exists(csv_file):
-    st.error("Run main.py first to generate data.")
-    st.stop()
+
+    sample_data = {
+        "Soil":[70],
+        "Temperature":[28],
+        "Humidity":[60],
+        "Light":[500],
+        "Water":[80],
+        "Pump":["OFF"],
+        "Alerts":[""]
+    }
+
+    df = pd.DataFrame(sample_data)
+
+else:
+    df = pd.read_csv(csv_file)
 
 df = pd.read_csv(csv_file)
 latest = df.iloc[-1]
