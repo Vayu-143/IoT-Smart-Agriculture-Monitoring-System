@@ -1,6 +1,6 @@
 import requests
 
-API_KEY = "your_api_key"
+API_KEY = "7ff6127263d42f651a13c30ee83b2445"
 
 def get_weather(city):
 
@@ -13,10 +13,9 @@ def get_weather(city):
             f"&units=metric"
         )
 
-        data = requests.get(
-            url,
-            timeout=5
-        ).json()
+        response = requests.get(url)
+
+        data = response.json()
 
         if "main" not in data:
 
@@ -32,10 +31,10 @@ def get_weather(city):
             "weather": data["weather"][0]["description"]
         }
 
-    except Exception:
+    except:
 
         return {
             "temp": "N/A",
             "humidity": "N/A",
-            "weather": "Service Unavailable"
+            "weather": "Weather API Not Configured"
         }
