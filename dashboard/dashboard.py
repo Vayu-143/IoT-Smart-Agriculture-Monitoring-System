@@ -43,29 +43,50 @@ with col2:
             "Pump": random.choice(["ON", "OFF"]),
             "Alerts": ""
         }
-        if not os.path.exists(csv_file):
-            df = pd.DataFrame([new_row])
-        else:
-            df = pd.read_csv(csv_file)
-            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
         
+        df = pd.read_csv(csv_file) if os.path.exists(csv_file) else pd.DataFrame()
+
+        if len(df) == 1 and df.iloc[0]["Soil"] == 0:
+            df = pd.DataFrame()
+
+        df.loc[len(df)] = new_row
         df.to_csv(csv_file, index=False)
-        st.success("New sensor data generated")
+        st.success("New data generated")
         st.rerun()
 
 with col3:
     if st.button("🗑 Clear Data"):
-        empty_df = pd.DataFrame(columns=["Soil", "Temperature", "Humidity", "Light", "Water", "Pump", "Alerts"])
-        empty_df.to_csv(csv_file, index=False)
-        st.success("All data cleared")
+        default_df = pd.DataFrame([{
+            "Soil": 0,
+            "Temperature": 0,
+            "Humidity": 0,
+            "Light": 0,
+            "Water": 0,
+            "Pump": "OFF",
+            "Alerts": ""
+        }])
+        default_df.to_csv(csv_file, index=False)
+        st.success("Data reset successfully")
         st.rerun()
 
-# --- LOAD DATA ---
+# --- LOAD AND PROTECT DATA ---
 if not os.path.exists(csv_file):
-    st.error("No data found. Please click 'Generate New Data' or run main.py.")
-    st.stop()
+    # Initialize file if it doesn't exist
+    pd.DataFrame(columns=["Soil", "Temperature", "Humidity", "Light", "Water", "Pump", "Alerts"]).to_csv(csv_file, index=False)
 
 df = pd.read_csv(csv_file)
+
+if df.empty:
+    df = pd.DataFrame([{
+        "Soil": 0,
+        "Temperature": 0,
+        "Humidity": 0,
+        "Light": 0,
+        "Water": 0,
+        "Pump": "OFF",
+        "Alerts": ""
+    }])
+
 latest = df.iloc[-1]
 
 def create_gauge(title, value, max_value=100):
