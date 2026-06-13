@@ -1,18 +1,10 @@
-import joblib
-
-model = joblib.load(
-    "ml/irrigation_model.pkl"
-)
-
 def predict_pump(
-        soil,
-        temp,
-        humidity,
-        water
+    soil,
+    temperature,
+    humidity,
+    water
 ):
+    if soil < 30:
+        return "ON"
 
-    result = model.predict(
-        [[soil,temp,humidity,water]]
-    )[0]
-
-    return "ON" if result == 1 else "OFF"
+    return "OFF"
