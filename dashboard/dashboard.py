@@ -2,56 +2,68 @@ import streamlit as st
 import pandas as pd
 import os
 import sys
+import random
 import plotly.graph_objects as go
 from streamlit_autorefresh import st_autorefresh
 
 # Adjust path to import modules from parent directory
-sys.path.append(
-    os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__),
-            ".."
-        )
-    )
-)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from crop_recommendation import recommend_crop
 from ml.predict_irrigation import predict_pump
 from utils.pdf_report import generate_report
 from weather.weather_service import get_weather
 
-st.set_page_config(
-    page_title="IoT Smart Agriculture",
-    page_icon="🌱",
-    layout="wide"
-)
+st.set_page_config(page_title="IoT Smart Agriculture", page_icon="🌱", layout="wide")
 
 # Auto-refresh every 5 seconds
-st_autorefresh(
-    interval=5000,
-    key="refresh"
-)
+st_autorefresh(interval=5000, key="refresh")
 
 st.title("🌱 IoT Smart Agriculture Monitoring System")
 
+# Ensure data directory exists
+os.makedirs("data", exist_ok=True)
 csv_file = "data/sensor_data.csv"
 
+# --- DATA MANAGEMENT BUTTONS ---
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    if st.button("🔄 Refresh"):
+        st.rerun()
+
+with col2:
+    if st.button("🎲 Generate New Data"):
+        new_row = {
+            "Soil": random.randint(20, 100),
+            "Temperature": random.randint(20, 40),
+            "Humidity": random.randint(30, 90),
+            "Light": random.randint(100, 1000),
+            "Water": random.randint(10, 100),
+            "Pump": random.choice(["ON", "OFF"]),
+            "Alerts": ""
+        }
+        if not os.path.exists(csv_file):
+            df = pd.DataFrame([new_row])
+        else:
+            df = pd.read_csv(csv_file)
+            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+        
+        df.to_csv(csv_file, index=False)
+        st.success("New sensor data generated")
+        st.rerun()
+
+with col3:
+    if st.button("🗑 Clear Data"):
+        empty_df = pd.DataFrame(columns=["Soil", "Temperature", "Humidity", "Light", "Water", "Pump", "Alerts"])
+        empty_df.to_csv(csv_file, index=False)
+        st.success("All data cleared")
+        st.rerun()
+
+# --- LOAD DATA ---
 if not os.path.exists(csv_file):
-
-    sample_data = {
-        "Soil":[70],
-        "Temperature":[28],
-        "Humidity":[60],
-        "Light":[500],
-        "Water":[80],
-        "Pump":["OFF"],
-        "Alerts":[""]
-    }
-
-    df = pd.DataFrame(sample_data)
-
-else:
-    df = pd.read_csv(csv_file)
+    st.error("No data found. Please click 'Generate New Data' or run main.py.")
+    st.stop()
 
 df = pd.read_csv(csv_file)
 latest = df.iloc[-1]
@@ -79,7 +91,7 @@ def create_gauge(title, value, max_value=100):
 st.subheader("📈 Project Statistics")
 c1, c2, c3 = st.columns(3)
 c1.metric("Records", len(df))
-c2.metric("Alerts", len(df[df["Alerts"] != ""]))
+c2.metric("Alerts", len(df[df["Alerts"].astype(str) != ""]))
 c3.metric("Pump ON Count", len(df[df["Pump"] == "ON"]))
 
 # --- LIVE SENSOR STATUS ---
@@ -118,66 +130,33 @@ st.info(f"Machine Learning Suggests Pump: {prediction}")
 st.subheader("☁ Weather Forecast")
 city = st.text_input("Farm Location", "Delhi")
 weather = get_weather(city)
-
-c1, c2, c3 = st.columns(3)
-c1.metric("Temperature", f"{weather['temp']} °C")
-c2.metric("Humidity", f"{weather['humidity']} %")
-c3.metric("Condition", weather["weather"])
+w1, w2, w3 = st.columns(3)
+w1.metric("Temperature", f"{weather['temp']} °C")
+w2.metric("Humidity", f"{weather['humidity']} %")
+w3.metric("Condition", weather["weather"])
 
 # --- PDF REPORT ---
 st.divider()
-
 if st.button("📄 Generate PDF Report"):
-
-    pdf_path = generate_report(
-        latest.to_dict(),
-        crop,
-        prediction,
-        weather
-    )
-
-    if os.path.exists(pdf_path):
-
-        st.success(
-            "PDF Generated Successfully!"
-        )
-
-        with open(
-            pdf_path,
-            "rb"
-        ) as file:
-
-            pdf_bytes = file.read()
-
-        st.download_button(
-            label="📥 Download PDF Report",
-            data=pdf_bytes,
-            file_name="IoT_Smart_Agriculture_Report.pdf",
-            mime="application/pdf"
-        )
-
+    pdf_path = generate_report(latest.to_dict(), crop, prediction, weather)
+    if pdf_path and os.path.exists(pdf_path):
+        st.success("PDF Generated Successfully!")
+        with open(pdf_path, "rb") as file:
+            st.download_button("📥 Download PDF Report", file, "IoT_Smart_Agriculture_Report.pdf", "application/pdf")
     else:
-
-        st.error(
-            "PDF file not found."
-        )
+        st.error("Failed to generate report.")
 
 # --- TRENDS & DATA ---
 st.subheader("🌱 Soil Moisture Trend")
 st.line_chart(df["Soil"])
-
 st.subheader("🌡 Temperature Trend")
 st.line_chart(df["Temperature"])
-
 st.subheader("💧 Humidity Trend")
 st.line_chart(df["Humidity"])
-
 st.subheader("🚰 Water Level Trend")
 st.line_chart(df["Water"])
 
 st.subheader("📜 Alert History")
-alerts = df[df["Alerts"] != ""]
-st.dataframe(alerts, use_container_width=True)
-
+st.dataframe(df[df["Alerts"].astype(str) != ""], use_container_width=True)
 st.subheader("🗂 Raw Sensor Data")
 st.dataframe(df, use_container_width=True)
